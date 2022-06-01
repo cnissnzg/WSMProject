@@ -1,7 +1,9 @@
+# encoding=utf-8
 from cgitb import text
 import json
 from posixpath import split
 import os
+
 
 def getDocs(path='data'):
     objs = []
@@ -16,4 +18,5 @@ def getDocs(path='data'):
     print('loads {} documents from files {}'.format(len(objs),str(listDir)))
     return objs
 
-getDocs()
+if __name__ == "__main__":
+    getDocs()
