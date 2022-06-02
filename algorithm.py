@@ -83,6 +83,30 @@ def booleanQuery(seq):
         for i in range(nTerm):
             if i not in resRight:
                 res.add(i)
+                
+'''
+bound: oldest article time
+source: article source
+'''
+def specificQuery(bound,source=None):
+    l,r,mid,ans = 0,len(docs)-1,-1,-1
+    while l <= r:
+        mid = (l + r) // 2
+        if(docs[mid]['parseTime'] < bound):
+            l = mid + 1
+        else:
+            ans = mid
+            r = mid - 1
+    ret = set()
+    if ans == -1:
+        return ret
+    else:
+        for i in range(ans,len(docs)):
+            if source == None or docs[i]['source'] == source:
+                ret.add(i)
+        return ret
+
 
 if __name__ == "__main__":
     init()
+    print(invDateIdxs)
