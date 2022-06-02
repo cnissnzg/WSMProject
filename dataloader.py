@@ -4,6 +4,8 @@ import json
 from posixpath import split
 import os
 import random
+from dateutil.parser import parse
+import datetime
 
 
 def getDocs(path='data'):
@@ -15,7 +17,12 @@ def getDocs(path='data'):
             for text in texts:
                 if len(text) == 0:
                     continue
-                objs.append(json.loads(text))
+                obj = json.loads(text)
+                try:
+                    obj['parseTime'] = parse(obj['time'])
+                except:
+                    obj['parseTime'] = datetime.datetime.now()
+                objs.append(obj)
     print('loads {} documents from files {}'.format(len(objs),str(listDir)))
     random.shuffle(objs)
     return objs[:300]

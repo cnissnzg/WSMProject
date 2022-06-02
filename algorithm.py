@@ -9,6 +9,7 @@ nTerm = 0
 invIdxs = dict()
 termDict = dict()
 idxDict = dict()
+invDateIdxs = list()
 
 def init(path='data'):
     docs = dataloader.getDocs(path)
@@ -23,6 +24,7 @@ def init(path='data'):
             exit(0)
         '''
         doc = docs[i]
+        invDateIdxs.append([doc['parseTime'],i])
         for part in partList:
             segList = jieba.cut_for_search(doc[part])
             termList = []
@@ -43,6 +45,7 @@ def init(path='data'):
                     'type' : part,
                     'pos' : j
                 })
+    invDateIdxs.sort(key=lambda ele:ele[0])
                 
 ## xxx && yyy || !! ( zzz && ttt )
 def booleanQuery(seq):
