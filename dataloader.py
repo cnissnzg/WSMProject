@@ -3,6 +3,7 @@ from cgitb import text
 import json
 from posixpath import split
 import os
+import random
 
 
 def getDocs(path='data'):
@@ -16,7 +17,8 @@ def getDocs(path='data'):
                     continue
                 objs.append(json.loads(text))
     print('loads {} documents from files {}'.format(len(objs),str(listDir)))
-    return objs
+    random.shuffle(objs)
+    return objs[:300]
 
 if __name__ == "__main__":
     getDocs()
