@@ -123,7 +123,7 @@ def specificQuery(bound,source=None):
 query: query text
 topk: number of top results to return
 '''
-def rankedSearch(query,topk):
+def rankedQuery(query,topk):
     termList = getTermList(query)
     res = []
     nDocs = len(docs)
