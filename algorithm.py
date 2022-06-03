@@ -1,6 +1,7 @@
 import jieba
 import re
 import dataloader
+import math
 
 partList = ["content","title"]
 docs = []
@@ -9,7 +10,17 @@ nTerm = 0
 invIdxs = dict()
 termDict = dict()
 idxDict = dict()
+termDF = dict()
 invDateIdxs = list()
+
+def getTermList(text):
+    segList = jieba.cut_for_search(text)
+    termList = []
+    for seg in segList:     
+        a=re.sub(r'[\W]','',seg)
+        if a != '':
+            termList.append(a.lower())
+    return termList
 
 def init(path='data'):
     docs = dataloader.getDocs(path)
@@ -26,18 +37,15 @@ def init(path='data'):
         doc = docs[i]
         invDateIdxs.append([doc['parseTime'],i])
         for part in partList:
-            segList = jieba.cut_for_search(doc[part])
-            termList = []
-            for seg in segList:     
-                a=re.sub(r'[\W]','',seg)
-                if a != '':
-                    termList.append(a.lower())
+            termList = getTermList(doc[part])
+            termCntSet = set()
             for j in range(len(termList)):
                 term = termList[j]
                 if term not in termDict:
                     termDict[term] = nTerm
                     idxDict[nTerm] = term
                     invIdxs[nTerm] = []
+                    termDF[nTerm] = 0
                     nTerm+=1
                 idx = termDict[term]
                 invIdxs[idx].append({
@@ -45,7 +53,12 @@ def init(path='data'):
                     'type' : part,
                     'pos' : j
                 })
+                if idx not in termCntSet:
+                    termDF[idx] += 1
+                    termCntSet.add(idx)
+            termCntSet.clear()
     invDateIdxs.sort(key=lambda ele:ele[0])
+        
                 
 ## xxx && yyy || !! ( zzz && ttt )
 def booleanQuery(seq):
@@ -106,6 +119,35 @@ def specificQuery(bound,source=None):
                 ret.add(i)
         return ret
 
+'''
+query: query text
+topk: number of top results to return
+'''
+def rankedSearch(query,topk):
+    termList = getTermList(query)
+    res = []
+    nDocs = len(docs)
+    topk = min(topk,nDocs)
+    for i in range(nDocs):
+        score = 0.0
+        for term in termList:
+            idx = termDict[term]
+            termIDF = math.log2(nDocs/(1+termDF[idx]))
+            termTF = 0
+            for invIdx in invIdxs[idx]:
+                if invIdx['docId'] ==  i:
+                    termTF += 1
+            score += termTF*termIDF
+        res.append({
+            'id' : i,
+            'score' : score
+        })
+    res.sort(key=lambda ele:ele['score'])
+    retSet = set()
+    for i in range(topk):
+        retSet.add(res[i]['id'])
+    return retSet
+    
 
 if __name__ == "__main__":
     init()
