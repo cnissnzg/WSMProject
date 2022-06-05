@@ -101,6 +101,8 @@ def booleanQuery(seq):
         return set()
     if n == 1:
         res = set()
+        if seq[0] not in termDict:
+            return res
         idx = termDict[seq[0]]
         for idxItem in invIdxs[idx]:
             if idxItem['docId'] not in res:
