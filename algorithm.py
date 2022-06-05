@@ -1,7 +1,13 @@
+from glob import glob
 import jieba
 import re
 import dataloader
 import math
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.cluster import KMeans
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+import pandas as pd
 
 partList = ["content","title"]
 docs = []
@@ -12,6 +18,7 @@ termDict = dict()
 idxDict = dict()
 termDF = dict()
 invDateIdxs = list()
+nLabel = 0
 
 def getTermList(text):
     segList = jieba.cut_for_search(text)
@@ -22,7 +29,24 @@ def getTermList(text):
             termList.append(a.lower())
     return termList
 
+def clustering(docs):
+    words=[]
+    for i in range(len(docs)):
+        doc=docs[i]
+        word=doc['title']
+        words.append(word)
+    vect = CountVectorizer()
+    x = vect.fit_transform(words)
+    x = x.toarray()
+    words_name = vect.get_feature_names()
+    df = pd.DataFrame(x, columns=words_name)
+    df_cs = cosine_similarity(df)
+    kms_cs = KMeans(n_clusters=5, random_state=0)
+    label_kms_cs = kms_cs.fit_predict(df_cs)
+    return label_kms_cs
+
 def init(path='data'):
+    global docs, termDict, idxDict, invIdxs, termDF, nTerm, invDateIdxs, nLabel
     docs = dataloader.getDocs(path)
     nTerm = 0
     for i in range(len(docs)):
@@ -58,6 +82,16 @@ def init(path='data'):
                     termCntSet.add(idx)
             termCntSet.clear()
     invDateIdxs.sort(key=lambda ele:ele[0])
+    
+    labels = clustering(docs)
+    nLabel = 0
+    for i in range(len(labels)):
+        docs[i]['label'] = labels[i]
+        if labels[i] + 1 > nLabel:
+            nLabel = labels[i] + 1
+    return docs, termDict, idxDict, invIdxs, termDF, nTerm, invDateIdxs, nLabel
+
+
         
                 
 ## xxx && yyy || !! ( zzz && ttt )
@@ -151,4 +185,4 @@ def rankedQuery(query,topk):
 
 if __name__ == "__main__":
     init()
-    print(invDateIdxs)
+    #print(termDict)
