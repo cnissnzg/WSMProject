@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<style type="text/css">
+
+			form .text {
+				display: inline-block;
+				border: 0;
+				width: 260px;
+				height: 35px;
+				font-size: 14px;
+				outline: none;
+
+				border: 2px solid #01af63;
+			}
+
+			form .search {
+
+				width: 90px;
+				height: 38px;
+				border: 0;
+				outline: none;
+				cursor: pointer;
+				/*   cursor: pointer;   鼠标悬停或点击时button时鼠标变成其他图标  */
+				text-align: center;
+				line-height: 40px;
+				background-color: #01af63;
+				color: #FFFFFF;
+			}
+
+            form .limitMultiLine{
+		        display: -webkit-box;
+		        -webkit-line-clamp: 2;
+		        -webkit-box-orient: vertical;
+		        text-overflow: ellipsis;
+		        overflow: hidden;
+	        }
+		</style>
+	</head>
+	<body>
+
+		<form action={% url 'searching:search' %}>
+			<input type="text" placeholder="Please input keywords" name="key" class="text" required />
+			<input type="submit" value="Search" class="search">
+            <select name="group" value="1">
+                <option value="1">All</option>
+                <option value="2">Health</option>
+                <option value="3">Business</option>
+                <option value="4">Sports</option>
+                <option value="5">Others</option>
+            </select>
+		</form>
+	</body>
+</html>
