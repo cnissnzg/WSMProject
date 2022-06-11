@@ -12,7 +12,7 @@ def getDocs(path='data'):
     objs = []
     listDir=os.listdir(path)
     for fileName in listDir:
-        with open('data/'+fileName,'r') as f:
+        with open('data/'+fileName,'r',encoding='utf-8') as f:
             texts = f.read().split('\n')
             for text in texts:
                 if len(text) == 0:
