@@ -1,5 +1,6 @@
 import jieba
 import re
+import datetime
 from searching.engine import dataloader
 import math
 from sklearn.feature_extraction.text import CountVectorizer
@@ -88,7 +89,10 @@ class tools():
                 self.nLabel = labels[i] + 1
 
     ## xxx && yyy || !! ( zzz && ttt )
-    def booleanQuery(self, seq):
+    def booleanQuery(self, seq, stop=0):
+        stop += 1
+        if(stop > 1000):
+            return set()
         n = len(seq)
         if n == 0 :
             return set()
@@ -103,7 +107,7 @@ class tools():
             return res
         
         if seq[0] == '(' and seq[-1] == ')':
-            return self.booleanQuery(seq[1:-1])
+            return self.booleanQuery(seq[1:-1],stop)
         inStack = 0
         for i in range(n):
             if seq[i] == '(':
@@ -112,19 +116,20 @@ class tools():
                 inStack -= 1
             elif inStack == 0:
                 if seq[i] == "&&":
-                    resLeft = self.booleanQuery(seq[:i])
-                    resRight = self.booleanQuery(seq[i+1:])
+                    resLeft = self.booleanQuery(seq[:i],stop)
+                    resRight = self.booleanQuery(seq[i+1:],stop)
                     return resLeft.intersection(resRight)
                 elif seq[i] == "||":
-                    resLeft = self.booleanQuery(seq[:i])
-                    resRight = self.booleanQuery(seq[i+1:])
+                    resLeft = self.booleanQuery(seq[:i],stop)
+                    resRight = self.booleanQuery(seq[i+1:],stop)
                     return resLeft.union(resRight)
         if seq[0] == "!!":
             res = set()
-            resRight = self.booleanQuery(seq[1:])
+            resRight = self.booleanQuery(seq[1:],stop)
             for i in range(len(self.docs)):
                 if i not in resRight:
                     res.add(i)
+            return res
                     
     '''
     bound: oldest article time
@@ -134,18 +139,20 @@ class tools():
         l,r,mid,ans = 0,len(self.docs)-1,-1,-1
         while l <= r:
             mid = (l + r) // 2
-            if(self.docs[mid]['parseTime'] < bound):
+            if(self.invDateIdxs[mid][0] < bound):
                 l = mid + 1
             else:
                 ans = mid
                 r = mid - 1
         ret = set()
+        print("ans =",ans)
         if ans == -1:
             return ret
         else:
-            for i in range(ans,len(self.docs)):
-                if source == None or self.docs[i]['source'] == source:
-                    ret.add(i)
+            for i in range(ans,len(self.invDateIdxs)):
+                doc = self.invDateIdxs[i][1]
+                if source == None or self.docs[doc]['source'] == source:
+                    ret.add(doc)
             return ret
 
     '''
@@ -160,8 +167,10 @@ class tools():
         for i in range(nDocs):
             score = 0.0
             for term in termList:
+                if term not in self.termDict:
+                    continue
                 idx = self.termDict[term]
-                termIDF = math.log2(nDocs/(1+self.termDF[idx]))
+                termIDF = math.log2(nDocs/(self.termDF[idx]))
                 termTF = 0
                 for invIdx in self.invIdxs[idx]:
                     if invIdx['docId'] ==  i:
@@ -181,5 +190,29 @@ class tools():
 if __name__ == "__main__":
     mytool = tools()
     mytool.init()
+    '''
+    for key in mytool.invIdxs:
+        if len(mytool.invIdxs[key]) > 2:
+            print(mytool.idxDict[key],mytool.invIdxs[key])
+    for i in range(10):
+        print(mytool.termDF[i])
+        print(mytool.invIdxs[i])
+        print(mytool.idxDict[i])
+    while True:
+        inputLine = input()
+        if inputLine == '':
+            break
+        now = inputLine.split(' ')
+        if now[0] == 'bool':
+            print('bool',now)
+            print(mytool.booleanQuery(now[1:]))
+        if now[0] == 'spec':
+            print('spec',now)
+            print(mytool.specificQuery(datetime.datetime(int(now[1]),int(now[2]),int(now[3]),int(now[4]),int(now[5])),None))
+        if now[0] == 'rank':
+            print('rank',now)
+            print(mytool.rankedQuery(now[1],5))
+            
     #init()
     #print(termDict)
+    '''
